@@ -2,6 +2,10 @@ import numpy as np
 from scipy import stats as st
 import pandas as pd
 import matplotlib.pyplot as plt
+import algorithm
+
+def quartile(series, n):
+    return algorithm.quartile(list(series), n)
 
 def stat_summary(data):
     summary = pd.DataFrame(columns=['sepal width', 'sepal length', 'petal width', 'petal length'])
@@ -9,9 +13,9 @@ def stat_summary(data):
     summary.loc['max'] = [x for x in data.max(numeric_only=True)]
     summary.loc['range'] = [x for x in summary.loc['max']-summary.loc['min']]
 
-    summary.loc['1st quartile'] = [x for x in data.quantile(0.25, numeric_only=True)]
-    summary.loc['median'] = [x for x in data.median(numeric_only=True)]
-    summary.loc['3rd quartile'] = [x for x in data.quantile(0.75, numeric_only=True)]
+    summary.loc['1st quartile'] = [quartile(data.iloc[:, x], 1) for x in range(4)]
+    summary.loc['median'] = [quartile(data.iloc[:, x], 2) for x in range(4)]
+    summary.loc['3rd quartile'] = [quartile(data.iloc[:, x], 3) for x in range(4)]
 
     summary.loc['harmonic mean'] = st.hmean(data.iloc[:, 0:4])
     summary.loc['geometric mean'] = st.gmean(data.iloc[:, 0:4])
