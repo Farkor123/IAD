@@ -2,10 +2,11 @@
 import numpy as np
 import math as m
 import matplotlib.pyplot as plt
+from tqdm import tqdm
 
 class neuronlayer():
 	def __init__(self, number_of_neurons, number_of_inputs_per_neuron):
-		#weights matrix, outputs x inputs
+		''' weights matrix, outputs x inputs '''
 		self.weights = (2 * np.asmatrix(np.random.random((number_of_neurons, number_of_inputs_per_neuron))) - 1)
 		#bias matrix, outputs x 1
 		self.bias = (2 * np.asmatrix(np.random.random((number_of_neurons, 1))) - 1)
@@ -23,13 +24,13 @@ class neuronlayer():
 
 class neuralnetwork():
 	def __init__(self, layers_array):
-		self.layers = np.array(layers_array)
+		self.layers = layers_array
 
 	def __sigmoid(self, x):
 		z, y = x.shape
 		for _ in range(z):
 			for __ in range(y):
-				x[_, __] = (1 / (1 + np.exp(-x[_, __])))
+				x[_, __] = (1 / (1 + m.exp(-x[_, __])))
 		return x
 
 	def __tanh(self, x):
@@ -77,32 +78,3 @@ class neuralnetwork():
 			self.layers[i].vb = 2 * _lambda * (self.layers[i].error) + _momentum * self.layers[i].vb
 			self.layers[i].weights = self.layers[i].weights + self.layers[i].v
 			self.layers[i].bias = self.layers[i].bias + self.layers[i].vb
-
-input_matrix = np.matrix([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]).T
-arr = np.arange(4)
-layer1 = neuronlayer(2, 4)
-layer2 = neuronlayer(4, 2)
-layerarray = np.array([layer1, layer2])
-network = neuralnetwork(layerarray)
-_lambda = 0.2
-_momentum = 0.6
-ex = list()
-why = list()
-for j in range(10000):
-	for x in range(4):
-		network.back_propagate(input_matrix[arr[x]].T, input_matrix[arr[x]].T, _lambda, _momentum)
-	if j % 10 == 0:
-		print("Progress ", 100*j/10000, "%")
-		ex.append(j)
-		cost = (layer2.error[0]**2 + layer2.error[1]**2 + layer2.error[2]**2 + layer2.error[3]**2)
-		why.append(float(cost))
-	np.random.shuffle(arr)
-
-for k in range(4):
-	network.forward_propagate(input_matrix[k].T)
-	print("###########################################")
-	print(input_matrix[k].T)
-	for q in range(4):
-		print(round(float(layer2.output[q,0]),1))
-plt.plot(ex, why)
-plt.show()
