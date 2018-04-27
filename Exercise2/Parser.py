@@ -14,10 +14,10 @@ class Parser:
         self._parser.add_argument('-m', '--mode', default=2, type=int,
                                   help='0 for learn, 1 for neural-stuff, 2 for both')
 
-        self._parser.add_argument('-hid', '--hidden', nargs='+', type=int, default=[2, 16, 16],
+        self._parser.add_argument('-hid', '--hidden', nargs='+', type=int, default=[2, 18, 18],
                                   help='Number of hidden layers and number of neurons per layer')
 
-        self._parser.add_argument('-e', '--epochs', type=int, default=10,
+        self._parser.add_argument('-e', '--epochs', type=int, default=50,
                                   help='Number of epochs')
 
         self._parser.add_argument('--lambda', type=float, default=0.01, dest='lamb',
