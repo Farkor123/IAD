@@ -24,10 +24,18 @@ for i in range(df_height):
     for j in range(df_width):
         if type(df.iloc[i, j]) is str:
             df.iloc[i, j] = ord(df.iloc[i, j])
+inputs = np.asmatrix(df.as_matrix())
+input_matrix = inputs[:, :df_width - 1]
+dupa = df.iloc[:, 8].as_matrix()
+dupa = pd.unique(dupa)
+print(dupa)
 df = np.asmatrix(df.as_matrix())
-input_matrix = df[:, :df_width - 1]
-output_matrix = df[:, df_width - 1]
-output_matrix = output_matrix / 100
+dupa = np.sort(dupa)
+classes = pd.DataFrame(np.zeros([df_height, dupa.size]))
+for i in range(dupa.size):
+    classes.iloc[:, i] = df[:, -1] == dupa[i]
+classes = np.asmatrix(classes.as_matrix())
+output_matrix = classes
 ###############
 # Layer block #
 ###############
@@ -40,7 +48,7 @@ for i in range(_hidden[0]):
         layer_array = np.append(
             layer_array, MLP.neuronlayer(_hidden[i + 1], _hidden[i]))
 layer_array = np.append(
-    layer_array, MLP.neuronlayer(1, _hidden[len(_hidden) - 1]))
+    layer_array, MLP.neuronlayer(dupa.size, _hidden[len(_hidden) - 1]))
 network = MLP.neuralnetwork(layer_array)
 ##############################
 # Shitty stuff, smells funny #
@@ -48,21 +56,27 @@ network = MLP.neuralnetwork(layer_array)
 ox = list()
 oy = list()
 arr = list(range(0, df_height))
+print(arr)
 for j in tqdm(range(_epochs)):
     for x in tqdm(range(df_height)):
         network.back_propagate(
-            input_matrix[arr[x]].T, output_matrix[arr[x]], _lambda, _momentum)
+            input_matrix[arr[x]].T, output_matrix[arr[x]].T, _lambda, _momentum)
     if j % 1 == 0:
         ox.append(j)
-        cost = (layer_array[layer_array.size - 1].error[0]**2)
+        cost = 0
+        for q in range(dupa.size):
+            cost = cost + (layer_array[-1].error[q, 0]**2)
         oy.append(float(cost))
     np.random.shuffle(arr)
 
 for k in range(4):
     network.forward_propagate(input_matrix[k].T)
-    print("###########################################")
-    print(100 * output_matrix[k])
-    print(100 * float(network.layers[layer_array.size - 1].output))
-print(layer_array[layer_array.size - 1].error[0]**2)
+    print("\n###########################################")
+    print(output_matrix[k])
+    print(network.layers[-1].output)
+cost = 0
+for q in range(dupa.size):
+    cost = cost + (layer_array[-1].error[q, 0]**2)
+print(cost)
 plt.plot(ox, oy)
 plt.show()
