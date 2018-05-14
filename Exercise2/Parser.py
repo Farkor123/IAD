@@ -8,7 +8,7 @@ class Parser:
         self._parser = argparse.ArgumentParser(
             description='Multilayered Perceptron')
 
-        self._parser.add_argument('-d', '--dataset', nargs='?', default='abalone', choices=['matrix', 'mnist', 'abalone'],
+        self._parser.add_argument('-d', '--dataset', nargs='?', default='abalone', choices=['tarasiuk', 'mnist', 'abalone'],
                                   help='Dataset name')
 
         self._parser.add_argument('-m', '--mode', default=2, type=int,
@@ -17,17 +17,20 @@ class Parser:
         self._parser.add_argument('-hid', '--hidden', nargs='+', type=int, default=[2, 18, 18],
                                   help='Number of hidden layers and number of neurons per layer')
 
-        self._parser.add_argument('-e', '--epochs', type=int, default=50,
+        self._parser.add_argument('-a', '--activation_functions', nargs='+', default=['leakyrelu', 'leakyrelu', 'sigmoid'], choices=['sigmoid', 'tanh', 'softsign', 'relu', 'leakyrelu'],
+                                  help='Activation functions for every hidden layer + output layer')
+
+        self._parser.add_argument('-e', '--epochs', type=int, default=1000,
                                   help='Number of epochs')
 
-        self._parser.add_argument('--lambda', type=float, default=0.01, dest='lamb',
+        self._parser.add_argument('--lambda', type=float, default=0.005, dest='lamb',
                                   help='Set lambda')
 
         self._parser.add_argument('--momentum', type=float, default=0.2,
                                   help='Set momentum')
 
         self._parser.add_argument('--no-plot', type=int, default=0,
-                                  help='No error plot')
+                                  help='Choose 1 for no error plot')
 
         self._parser.add_argument('-err', '--error-treshold', type=float, default=0,
                                   help='Error treshold, surpassing it will cause program to stop')
@@ -58,3 +61,6 @@ class Parser:
 
     def get_plot(self):
         return self._args.no_plot
+
+    def get_activation_functions(self):
+        return self._args.activation_functions
