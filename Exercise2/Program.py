@@ -2,47 +2,26 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
-from tqdm import tqdm
 import Parser
-import sys
 import MLP
+import ABALON
 ################
 # Parser block #
 ################
 np.seterr(over = 'ignore')
 P = Parser.Parser()
 P.parse()
-_epochs = 1000
-_lambda = 0.005
-_momentum = 0.9
+_epochs = P.get_epochs()
+_lambda = P.get_lambda()
+_momentum = P.get_momentum()
 _data = P.get_dataset()
 _hidden = P.get_hidden()
+_activation_functions = P.get_activation_functions()
 #############
 # CSV block #
 #############
-df = pd.read_csv(_data + '.data', header=None)
-df_height, df_width = df.shape
-for i in range(df_height):
-    for j in range(df_width):
-        if type(df.iloc[i, j]) is str:
-            df.iloc[i, j] = ord(df.iloc[i, j]) / 100
-inputs = np.asmatrix(df.as_matrix())
-input_matrix = inputs[:, :df_width - 1]
-dupa = df.iloc[:, 8].as_matrix()
-dupa = pd.unique(dupa)
-df = np.asmatrix(df.as_matrix())
-dupa = np.sort(dupa)
-classes = pd.DataFrame(np.zeros([df_height, dupa.size]))
-for i in range(dupa.size):
-    classes.iloc[:, i] = df[:, -1] >= dupa[i]
-classes = np.asmatrix(classes.as_matrix())
-#ch, cw = classes.shape
-#intclas = np.zeros((ch, cw))
-#for i in range(ch):
-#    for j in range(cw):
-#        intclas[i, j] = float(classes[i, j])
-#output_matrix = classes
-output_matrix = classes.astype(np.float)
+if _data == 'abalone':
+    input_matrix, output_matrix, temp_matrix, df_width, df_height = ABALON.createdataset(_data)
 ###############
 # Layer block #
 ###############
@@ -50,39 +29,50 @@ layer_array = np.array([])
 for i in range(_hidden[0]):
     if i == 0:
         layer_array = np.append(layer_array, np.array(
-            [MLP.neuronlayer(_hidden[1], df_width - 1)]))
+            [MLP.NeuronLayer(_hidden[1], df_width - 1, _activation_functions[0])]))
     else:
         layer_array = np.append(
-            layer_array, MLP.neuronlayer(_hidden[i + 1], _hidden[i]))
+            layer_array, MLP.NeuronLayer(_hidden[i + 1], _hidden[i], _activation_functions[i]))
 layer_array = np.append(
-    layer_array, MLP.neuronlayer(dupa.size, _hidden[len(_hidden) - 1]))
-network = MLP.neuralnetwork(layer_array)
+    layer_array, MLP.NeuronLayer(temp_matrix.size, _hidden[len(_hidden) - 1], _activation_functions[-1]))
+network = MLP.NeuralNetwork(layer_array)
 ##############################
 # Shitty stuff, smells funny #
 ##############################
 ox = list()
 oy = list()
 arr = list(range(0, df_height))
+plt.ion()
+fig = plt.figure()
+highest = 0
+lowest = 99999
 for j in range(_epochs):
+    cost = 0
     for x in range(df_height):
         network.back_propagate(
             input_matrix[arr[x]].T, output_matrix[arr[x]].T, _lambda, _momentum)
-    if j % 1 == 0:
-        ox.append(j)
-        cost = 0
-        for q in range(dupa.size):
-            cost = cost + (layer_array[-1].error[q, 0]**2)
-        oy.append(float(cost))
+        for q in range(temp_matrix.size):
+            cost += (layer_array[-1].error[q, 0] * layer_array[-1].error[q, 0])
     np.random.shuffle(arr)
-    _lambda *= 0.997
+    _lambda *= 0.98
     perc = 0
     for k in range(df_height):
         network.forward_propagate(input_matrix[k].T)
-        if(np.matrix.sum(output_matrix[k]) == np.matrix.sum(layer_array[-1].output[:] > 0.5)):
+        if np.matrix.sum(output_matrix[k]) == np.matrix.sum(layer_array[-1].output[:] > 0.45):
             perc += 1
-    print(100 * perc / df_height,"%\n")
+    if 100 * perc / df_height > highest:
+        highest = round(100 * perc / df_height, 2)
+    if round(float(cost), 2) < lowest:
+        lowest = round(float(cost), 2)
+    print(str(round(100 * perc / df_height, 2)) + "% (highest accuracy: " + str(highest) + "%, lowest error: " + str(lowest) + ")")
+    ox.append(j)
+    oy.append(float(cost))
+    plt.plot(ox, oy)
+    plt.show()
+    plt.pause(0.0001)
+
 cost = 0
-for q in range(dupa.size):
+for q in range(temp_matrix.size):
     cost = cost + (layer_array[-1].error[q, 0]**2)
 print(cost)
 plt.plot(ox, oy)
