@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import Parser
 import MLP
-import ABALON
+import FUNCTIONS
 ################
 # Parser block #
 ################
@@ -17,11 +17,24 @@ _momentum = P.get_momentum()
 _data = P.get_dataset()
 _hidden = P.get_hidden()
 _activation_functions = P.get_activation_functions()
+_mode = P.get_mode()
+_path = P.get_path()
+_mistake = 3
 #############
 # CSV block #
 #############
 if _data == 'abalone':
-    input_matrix, output_matrix, temp_matrix, df_width, df_height = ABALON.createdataset(_data)
+    if _mode == 1:
+        _data += '_test'
+    else:
+        _data += '_train'
+    input_matrix, output_matrix, temp_matrix, df_width, df_height = FUNCTIONS.createabalonset(_data)
+if _data == 'mnist':
+    if _mode == 1:
+        _data += '_test'
+    else:
+        _data += '_train'
+    input_matrix, output_matrix, temp_matrix, df_width, df_height = FUNCTIONS.createabalonset(_data)
 ###############
 # Layer block #
 ###############
@@ -39,41 +52,7 @@ network = MLP.NeuralNetwork(layer_array)
 ##############################
 # Shitty stuff, smells funny #
 ##############################
-ox = list()
-oy = list()
-arr = list(range(0, df_height))
-plt.ion()
-fig = plt.figure()
-highest = 0
-lowest = 99999
-for j in range(_epochs):
-    cost = 0
-    for x in range(df_height):
-        network.back_propagate(
-            input_matrix[arr[x]].T, output_matrix[arr[x]].T, _lambda, _momentum)
-        for q in range(temp_matrix.size):
-            cost += (layer_array[-1].error[q, 0] * layer_array[-1].error[q, 0])
-    np.random.shuffle(arr)
-    _lambda *= 0.98
-    perc = 0
-    for k in range(df_height):
-        network.forward_propagate(input_matrix[k].T)
-        if np.matrix.sum(output_matrix[k]) == np.matrix.sum(layer_array[-1].output[:] > 0.45):
-            perc += 1
-    if 100 * perc / df_height > highest:
-        highest = round(100 * perc / df_height, 2)
-    if round(float(cost), 2) < lowest:
-        lowest = round(float(cost), 2)
-    print(str(round(100 * perc / df_height, 2)) + "% (highest accuracy: " + str(highest) + "%, lowest error: " + str(lowest) + ")")
-    ox.append(j)
-    oy.append(float(cost))
-    plt.plot(ox, oy)
-    plt.show()
-    plt.pause(0.0001)
-
-cost = 0
-for q in range(temp_matrix.size):
-    cost = cost + (layer_array[-1].error[q, 0]**2)
-print(cost)
-plt.plot(ox, oy)
-plt.show()
+if _mode == 0:
+    FUNCTIONS.learn(_epochs, df_height, df_width, _lambda, _momentum, temp_matrix, input_matrix, output_matrix, layer_array, network, _path)
+else:
+    FUNCTIONS.test(df_height, df_width, temp_matrix, input_matrix, output_matrix, _path, _mistake)

@@ -8,19 +8,19 @@ class Parser:
         self._parser = argparse.ArgumentParser(
             description='Multilayered Perceptron')
 
-        self._parser.add_argument('-d', '--dataset', nargs='?', default='abalone', choices=['tarasiuk', 'mnist', 'abalone'],
+        self._parser.add_argument('-d', '--dataset', nargs='?', default='mnist', choices=['tarasiuk', 'mnist', 'abalone'],
                                   help='Dataset name')
 
-        self._parser.add_argument('-m', '--mode', default=2, type=int,
-                                  help='0 for learn, 1 for neural-stuff, 2 for both')
+        self._parser.add_argument('-m', '--mode', default=0, type=int,
+                                  help='0 for learn, 1 for test')
 
-        self._parser.add_argument('-hid', '--hidden', nargs='+', type=int, default=[2, 18, 18],
+        self._parser.add_argument('-hid', '--hidden', nargs='+', type=int,
                                   help='Number of hidden layers and number of neurons per layer')
 
-        self._parser.add_argument('-a', '--activation_functions', nargs='+', default=['leakyrelu', 'leakyrelu', 'sigmoid'], choices=['sigmoid', 'tanh', 'softsign', 'relu', 'leakyrelu'],
+        self._parser.add_argument('-a', '--activation_functions', nargs='+', default=['sigmoid', 'sigmoid', 'sigmoid'], choices=['sigmoid', 'tanh', 'softsign', 'relu', 'leakyrelu'],
                                   help='Activation functions for every hidden layer + output layer')
 
-        self._parser.add_argument('-e', '--epochs', type=int, default=1000,
+        self._parser.add_argument('-e', '--epochs', type=int, default=10,
                                   help='Number of epochs')
 
         self._parser.add_argument('--lambda', type=float, default=0.005, dest='lamb',
@@ -35,6 +35,9 @@ class Parser:
         self._parser.add_argument('-err', '--error-treshold', type=float, default=0,
                                   help='Error treshold, surpassing it will cause program to stop')
 
+        self._parser.add_argument('-sr', '--serialize',
+                                  help='File name of serialization')
+
     def parse(self):
         self._args = self._parser.parse_args()
 
@@ -45,7 +48,11 @@ class Parser:
         return self._args.mode
 
     def get_hidden(self):
-        return self._args.hidden
+        if self._args.hidden is None:
+            if self._args.dataset == 'abalone':
+                return [2, 18, 18]
+            else:
+                return [2, 397, 397]
 
     def get_epochs(self):
         return self._args.epochs
@@ -64,3 +71,7 @@ class Parser:
 
     def get_activation_functions(self):
         return self._args.activation_functions
+
+    def get_path(self):
+        if self._args.serialize is None:
+            return self._args.dataset + '.p'
